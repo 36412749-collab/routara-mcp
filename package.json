@@ -1,0 +1,61 @@
+﻿{
+  "name": "routara-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Routara — OpenAI-compatible LLM, image & video APIs at api.routara.ai",
+  "mcpName": "io.github.36412749-collab/routara-mcp",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "routara-mcp": "dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "server.json",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node ../../node_modules/typescript/bin/tsc || node ./node_modules/typescript/bin/tsc",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/index.js",
+    "test": "node --test dist/test/smoke.test.js",
+    "test:live": "node scripts/live-smoke.mjs",
+    "validate:registry": "mcp-publisher validate || npx -y @modelcontextprotocol/publisher validate"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "routara",
+    "llm",
+    "openai",
+    "cursor",
+    "claude",
+    "image-generation",
+    "video-generation"
+  ],
+  "author": "Routara <support@routara.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/36412749-collab/routara-mcp.git"
+  },
+  "homepage": "https://routara.ai",
+  "bugs": {
+    "url": "https://routara.ai/#docs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2"
+  }
+}
