@@ -1,0 +1,26 @@
+# Smithery configuration for the npm/stdio distribution.
+# The API key is optional for discovery; calls return a clear error until one
+# is supplied by the client configuration.
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      ROUTARA_API_KEY:
+        type: string
+        title: Routara API key
+        description: API key from https://routara.ai/#auth
+      ROUTARA_API_BASE:
+        type: string
+        title: API base URL
+        default: https://api.routara.ai/v1
+    required: []
+  commandFunction: |-
+    (config) => ({
+      command: 'npx',
+      args: ['-y', 'routara-mcp'],
+      env: {
+        ...(config.ROUTARA_API_KEY ? { ROUTARA_API_KEY: config.ROUTARA_API_KEY } : {}),
+        ...(config.ROUTARA_API_BASE ? { ROUTARA_API_BASE: config.ROUTARA_API_BASE } : {})
+      }
+    })

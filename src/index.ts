@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -19,8 +19,24 @@ const PKG_VERSION = (() => {
   }
 })();
 
-function getClient(): RoutaraClient {
-  return new RoutaraClient({ apiKey: resolveApiKey() });
+export type RoutaraMcpServerOptions = {
+  apiKey?: string;
+  baseUrl?: string;
+};
+
+// Smithery's hosted-module scanner looks for these two exports.  Keeping the
+// key optional is intentional: tool discovery and the MCP handshake must work
+// without credentials; the key is required only when a tool calls Routara.
+export const configSchema = z.object({
+  apiKey: z.string().optional().describe('Routara API key (sk-or-v1-...)'),
+  baseUrl: z.string().url().optional().describe('Optional Routara API base URL'),
+});
+
+function getClient(options: RoutaraMcpServerOptions = {}): RoutaraClient {
+  return new RoutaraClient({
+    apiKey: options.apiKey || resolveApiKey(),
+    baseUrl: options.baseUrl,
+  });
 }
 
 function textResult(data: unknown) {
@@ -79,7 +95,7 @@ const chatMessage = z.object({
   tool_calls: z.array(jsonObject).optional(),
 });
 
-export async function main() {
+export function createRoutaraMcpServer(options: RoutaraMcpServerOptions = {}) {
   const server = new McpServer({ name: 'routara-mcp', version: PKG_VERSION });
 
   server.tool(
@@ -92,7 +108,7 @@ export async function main() {
     },
     async ({ query, offset = 0, limit = 200 }) => {
       try {
-        const data = await getClient().listModels();
+        const data = await getClient(options).listModels();
         const all = (data.data ?? []).map((model) => model.id);
         const normalizedQuery = query?.trim().toLowerCase();
         const matches = normalizedQuery
@@ -133,7 +149,7 @@ export async function main() {
           throw new Error('Provide message or messages.');
         }
         const conversation = (messages ?? [{ role: 'user', content: message! }]) as ChatMessage[];
-        const data = await getClient().chat({
+        const data = await getClient(options).chat({
           model,
           messages: conversation,
           max_tokens,
@@ -168,7 +184,7 @@ export async function main() {
     },
     async (params) => {
       try {
-        return textResult(await getClient().generateImage(params));
+        return textResult(await getClient(options).generateImage(params));
       } catch (err) {
         return errorResult(err);
       }
@@ -190,7 +206,7 @@ export async function main() {
     },
     async (params) => {
       try {
-        return textResult(await getClient().generateVideo(params));
+        return textResult(await getClient(options).generateVideo(params));
       } catch (err) {
         return errorResult(err);
       }
@@ -206,17 +222,40 @@ export async function main() {
     },
     async ({ task_id, model }) => {
       try {
-        return textResult(await getClient().getVideoTask(task_id, model));
+        return textResult(await getClient(options).getVideoTask(task_id, model));
       } catch (err) {
         return errorResult(err);
       }
     },
   );
 
+  return server;
+}
+
+/** Smithery hosted-module entrypoint. */
+export function createServer({
+  config,
+}: { config?: z.infer<typeof configSchema> } = {}) {
+  return createRoutaraMcpServer({ apiKey: config?.apiKey, baseUrl: config?.baseUrl });
+}
+
+export async function main() {
+  const server = createRoutaraMcpServer();
   await server.connect(new StdioServerTransport());
 }
 
-main().catch((err) => {
-  console.error('[routara-mcp] fatal:', err);
-  process.exit(1);
-});
+// `index.ts` is also bundled into the Routara HTTP gateway. In a CommonJS
+// bundle `import.meta.url` is unavailable, so guard it before resolving the
+// entrypoint instead of evaluating fileURLToPath eagerly.
+const currentModulePath =
+  typeof import.meta.url === 'string' ? fileURLToPath(import.meta.url) : '';
+const isDirectExecution = Boolean(
+  currentModulePath && process.argv[1] && currentModulePath === resolve(process.argv[1]),
+);
+
+if (isDirectExecution) {
+  main().catch((err) => {
+    console.error('[routara-mcp] fatal:', err);
+    process.exit(1);
+  });
+}
