@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.2",
   "name": "routara-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "OpenAI-compatible LLM, image & video MCP for Routara (api.routara.ai)",
   "author": {
     "name": "Routara",

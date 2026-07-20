@@ -6,7 +6,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { RoutaraApiError, RoutaraClient, resolveApiKey } from './api.js';
-const FALLBACK_VERSION = '1.1.0';
+const FALLBACK_VERSION = '1.1.1';
 const PKG_VERSION = (() => {
     try {
         const pkg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'));

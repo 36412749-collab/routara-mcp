@@ -1,6 +1,6 @@
 ﻿{
   "name": "routara-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server for Routara — OpenAI-compatible LLM, image & video APIs at api.routara.ai",
   "mcpName": "io.github.36412749-collab/routara-mcp",
   "type": "module",

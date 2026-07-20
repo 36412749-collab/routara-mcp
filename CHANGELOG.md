@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 - 2026-07-20
+
+- Fixed Smithery hosted discovery and configurable server creation.
+- Added Smithery deployment metadata to the npm package.
+- Corrected official Registry and mcp.so directory links.
+- Updated mcp.so ownership and current 787+ model positioning.
+
 ## 1.1.0 - 2026-07-20
 
 - Added bounded request timeouts and retries for transient failures.

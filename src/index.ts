@@ -7,7 +7,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { RoutaraApiError, RoutaraClient, resolveApiKey, type ChatMessage } from './api.js';
 
-const FALLBACK_VERSION = '1.1.0';
+const FALLBACK_VERSION = '1.1.1';
 const PKG_VERSION = (() => {
   try {
     const pkg = JSON.parse(

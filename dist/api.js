@@ -57,7 +57,7 @@ export class RoutaraClient {
                 const headers = {
                     Authorization: `Bearer ${this.apiKey}`,
                     Accept: 'application/json',
-                    'User-Agent': 'routara-mcp/1.1.0',
+                    'User-Agent': 'routara-mcp/1.1.1',
                 };
                 if (body !== undefined)
                     headers['Content-Type'] = 'application/json';
