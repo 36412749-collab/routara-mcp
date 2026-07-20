@@ -21,6 +21,7 @@
     "CHANGELOG.md",
     "server.json",
     "glama.json",
+    "smithery.yaml",
     "LICENSE"
   ],
   "scripts": {

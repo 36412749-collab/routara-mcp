@@ -93,9 +93,9 @@ ROUTARA_API_KEY=sk-or-v1-... npm run test:live
 ## Directory listings
 
 - [npm](https://www.npmjs.com/package/routara-mcp)
-- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.36412749-collab%2Froutara-mcp)
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers/io.github.36412749-collab%2Froutara-mcp/versions)
 - [Glama](https://glama.ai/mcp/servers/36412749-collab/routara-mcp)
-- [mcp.so](https://mcp.so/servers/routara-mcp)
+- [mcp.so](https://mcp.so/server/routara-llm-gateway/36412749-collab)
 - [Smithery](https://smithery.ai/servers/nbjack9897/routara-mcp)
 - [PulseMCP](https://www.pulsemcp.com/servers/routara)
 
