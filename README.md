@@ -1,15 +1,14 @@
 # Routara MCP Server
 
 [![npm version](https://img.shields.io/npm/v/routara-mcp.svg)](https://www.npmjs.com/package/routara-mcp)
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.36412749--collab%2Froutara--mcp-blue)](https://registry.modelcontextprotocol.io/v0/servers/io.github.36412749-collab/routara-mcp)
-[![Glama MCP](https://img.shields.io/badge/Glama-MCP%20Server-blue)](https://glama.ai/mcp/servers/36412749-collab/routara-mcp)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.36412749-collab%2Froutara-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
 
-Official [Model Context Protocol](https://modelcontextprotocol.io) server for **Routara** — call **787+ LLMs**, image, and video models through `api.routara.ai` from **Cursor**, **Claude Desktop**, **Windsurf**, **VS Code**, and other MCP clients.
+Official [Model Context Protocol](https://modelcontextprotocol.io) server for [Routara](https://routara.ai). Use Routara chat, image, and video models from Cursor, Claude Desktop, Codex, Windsurf, VS Code, and other MCP clients.
 
-- **Website:** https://routara.ai
-- **API:** https://api.routara.ai/v1
-- **Get API key:** https://routara.ai/#auth ($1 promo credit on signup)
+- Website and setup guide: https://routara.ai/mcp
+- OpenAI-compatible API: https://api.routara.ai/v1
+- Create an API key: https://routara.ai/#auth
 
 ## Install
 
@@ -17,26 +16,19 @@ Official [Model Context Protocol](https://modelcontextprotocol.io) server for **
 npx -y routara-mcp
 ```
 
-Or add globally: `npm install -g routara-mcp`
+Or install the one-click `routara-mcp.mcpb` bundle from the latest GitHub release.
 
 ## Tools
 
 | Tool | Description |
-|------|-------------|
-| `routara_list_models` | List models in the Routara catalog |
-| `routara_chat` | Chat completion (OpenAI-compatible) |
-| `routara_generate_image` | Image generation (cash wallet balance required) |
-| `routara_generate_video` | Submit async video job (cash balance required) |
-| `routara_get_video_status` | Poll video task status |
+|---|---|
+| `routara_list_models` | Search and paginate the live model catalog |
+| `routara_chat` | Single-turn or multi-turn chat, including tool calls |
+| `routara_generate_image` | Text-to-image and reference-image generation |
+| `routara_generate_video` | Text-to-video and image-to-video submission |
+| `routara_get_video_status` | Poll an asynchronous video task |
 
-## Quick start
-
-1. Create an API key at [routara.ai → Auth](https://routara.ai/#auth) (`sk-or-v1-...`).
-2. Add to your MCP client:
-
-### Cursor
-
-Settings → MCP → Add server, or edit `~/.cursor/mcp.json`:
+## MCP client configuration
 
 ```json
 {
@@ -52,82 +44,65 @@ Settings → MCP → Add server, or edit `~/.cursor/mcp.json`:
 }
 ```
 
-### Claude Desktop
+### OpenAI Codex
 
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+```toml
+[mcp_servers.routara]
+command = "npx"
+args = ["-y", "routara-mcp"]
+enabled = true
 
-```json
-{
-  "mcpServers": {
-    "routara": {
-      "command": "npx",
-      "args": ["-y", "routara-mcp"],
-      "env": {
-        "ROUTARA_API_KEY": "sk-or-v1-YOUR_KEY_HERE"
-      }
-    }
-  }
-}
+[mcp_servers.routara.env]
+ROUTARA_API_KEY = "sk-or-v1-YOUR_KEY_HERE"
 ```
 
 ## Environment
 
 | Variable | Required | Default |
-|----------|----------|---------|
-| `ROUTARA_API_KEY` | Yes | — |
+|---|---:|---|
+| `ROUTARA_API_KEY` | Yes for tool calls | None |
 | `ROUTARA_API_BASE` | No | `https://api.routara.ai/v1` |
+| `ROUTARA_API_TIMEOUT_MS` | No | `30000` |
 
-## Listed on
+The process can start and complete the MCP handshake without an API key. A key is resolved only when a Routara tool is invoked, which lets directories validate the server safely.
 
-- [npm](https://www.npmjs.com/package/routara-mcp) · `routara-mcp@1.0.2`
-- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers/io.github.36412749-collab/routara-mcp) · `io.github.36412749-collab/routara-mcp`
-- [Glama](https://glama.ai/mcp/servers/36412749-collab/routara-mcp) · claimed listing
-- [mcp.so](https://mcp.so/server/routara-llm-gateway/36412749-collab)
-- [Smithery](https://smithery.ai/server/nbjack9897/routara-mcp)
-- [PulseMCP](https://www.pulsemcp.com/servers?q=routara)
+## Reliability and compatibility
 
-## Health check (Glama / CI)
-
-The server starts **without** `ROUTARA_API_KEY` so registries can run MCP handshake (`initialize` + `tools/list`). API key is required only when invoking tools.
-
-```bash
-npm ci && npm run build && npm test
-# Optional live probe (needs real key):
-ROUTARA_API_KEY=sk-or-v1-... npm run test:live
-```
-
-After pushing to GitHub, re-run **Claim ownership** on Glama once to refresh the listing index.
-
-## Troubleshooting
-
-| Symptom | Fix |
-|---------|-----|
-| `ROUTARA_API_KEY is required` on tool call | Set env in MCP client config; get key at [routara.ai/#auth](https://routara.ai/#auth) |
-| `401 invalid_api_key` | Regenerate key in dashboard; ensure `sk-or-v1-` prefix |
-| `402` / insufficient balance | Top up cash wallet at routara.ai |
-| Image/video fails, chat works | Media requires **cash** balance; promo credits are chat-only on economy models |
-| Server won't start in inspector | Use `npx -y routara-mcp` with Node ≥18; run `npm run build` if developing from source |
+- Requests time out instead of hanging indefinitely.
+- Transient network errors, HTTP 429, and HTTP 5xx responses are retried with bounded backoff.
+- API errors include the upstream request ID and retry delay when available.
+- `routara_chat` returns the complete OpenAI-compatible response, preserving reasoning content and tool calls.
+- Media parameters are forwarded only when explicitly supplied; model-specific support varies.
 
 ## Development
 
 ```bash
-npm install
+npm ci
 npm run build
-ROUTARA_API_KEY=sk-or-v1-... npm run test:live
 npm test
+npm run validate:registry
+npm run build:mcpb
 ```
 
-## Billing notes
+For a live API smoke test:
 
-- One API key works for text, image, and video — switch `model` and tool, not the key.
-- Image/video require **cash wallet** balance (promo credits cannot be used for media).
-- Chat uses standard per-token billing with Smart Route™ failover across upstream pools.
+```bash
+ROUTARA_API_KEY=sk-or-v1-... npm run test:live
+```
 
-## Related
+## Directory listings
 
-- **JSON Translate GitHub Action:** https://github.com/36412749-collab/json-translate-action
-- **Docs:** https://routara.ai/docs
+- [npm](https://www.npmjs.com/package/routara-mcp)
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.36412749-collab%2Froutara-mcp)
+- [Glama](https://glama.ai/mcp/servers/36412749-collab/routara-mcp)
+- [mcp.so](https://mcp.so/servers/routara-mcp)
+- [Smithery](https://smithery.ai/servers/nbjack9897/routara-mcp)
+- [PulseMCP](https://www.pulsemcp.com/servers/routara)
+
+## Security
+
+Do not commit API keys. If a key is exposed, revoke it in the Routara dashboard immediately. Please report security issues privately to support@routara.ai.
 
 ## License
 
-MIT © [Routara](https://routara.ai)
+MIT

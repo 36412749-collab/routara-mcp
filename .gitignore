@@ -3,4 +3,7 @@ node_modules/
 .DS_Store
 mcp-publisher.exe
 mcp-publisher
+.mcpb-build/
+*.mcpb
+mcp-publisher*.tar.gz
 .npmrc

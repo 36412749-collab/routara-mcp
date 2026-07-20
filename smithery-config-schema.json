@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "ROUTARA_API_KEY": {
+      "type": "string",
+      "title": "Routara API Key",
+      "description": "sk-or-v1- from https://routara.ai/#auth"
+    }
+  },
+  "required": ["ROUTARA_API_KEY"]
+}

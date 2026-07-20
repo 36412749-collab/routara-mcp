@@ -7,12 +7,12 @@
     "url": "https://github.com/36412749-collab/routara-mcp",
     "source": "github"
   },
-  "version": "1.0.2",
+  "version": "1.1.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "routara-mcp",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "transport": {
         "type": "stdio"
       },
@@ -27,6 +27,13 @@
         {
           "name": "ROUTARA_API_BASE",
           "description": "Optional API base URL (default https://api.routara.ai/v1)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "ROUTARA_API_TIMEOUT_MS",
+          "description": "Optional request timeout in milliseconds (default 30000)",
           "isRequired": false,
           "format": "string",
           "isSecret": false

@@ -27,7 +27,7 @@ $server | ConvertTo-Json -Depth 10 | Set-Content server.json -Encoding utf8
 
 if (-not (Test-Path .git)) { git init }
 git add .
-git commit -m "feat: routara-mcp v1.0.0 (npm published)" 2>$null
+git commit -m "feat: routara-mcp v1.1.0" 2>$null
 git branch -M main
 
 $remote = "https://github.com/$GitHubUsername/$RepoName.git"

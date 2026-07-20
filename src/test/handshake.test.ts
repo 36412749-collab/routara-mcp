@@ -67,7 +67,7 @@ test('MCP stdio handshake lists 5 tools without ROUTARA_API_KEY', async () => {
     send(proc, { jsonrpc: '2.0', method: 'notifications/initialized' });
 
     const listed = await call('tools/list', {});
-    const tools = (listed.result as { tools?: Array<{ name: string }> })?.tools ?? [];
+    const tools = (listed.result as { tools?: Array<{ name: string; inputSchema?: { properties?: Record<string, unknown> } }> })?.tools ?? [];
     assert.equal(tools.length, 5, `expected 5 tools, got ${tools.length}: ${tools.map((t) => t.name).join(', ')}`);
     const names = new Set(tools.map((t) => t.name));
     for (const n of [
@@ -79,6 +79,13 @@ test('MCP stdio handshake lists 5 tools without ROUTARA_API_KEY', async () => {
     ]) {
       assert.ok(names.has(n), `missing tool ${n}`);
     }
+    const chat = tools.find((tool) => tool.name === 'routara_chat');
+    assert.ok(chat?.inputSchema?.properties?.messages, 'chat must expose multi-turn messages');
+    assert.ok(chat?.inputSchema?.properties?.tools, 'chat must expose function tools');
+    const image = tools.find((tool) => tool.name === 'routara_generate_image');
+    assert.ok(image?.inputSchema?.properties?.image_url, 'image tool must expose reference images');
+    const video = tools.find((tool) => tool.name === 'routara_generate_video');
+    assert.ok(video?.inputSchema?.properties?.aspect_ratio, 'video tool must expose aspect ratio');
   } finally {
     proc.kill();
     await once(proc, 'exit');

@@ -5,16 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { RoutaraApiError, RoutaraClient, resolveApiKey } from './api.js';
+import { RoutaraApiError, RoutaraClient, resolveApiKey, type ChatMessage } from './api.js';
 
+const FALLBACK_VERSION = '1.1.0';
 const PKG_VERSION = (() => {
   try {
     const pkg = JSON.parse(
       readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'),
     ) as { version?: string };
-    return pkg.version ?? '1.0.2';
+    return pkg.version ?? FALLBACK_VERSION;
   } catch {
-    return '1.0.2';
+    return FALLBACK_VERSION;
   }
 })();
 
@@ -23,25 +24,23 @@ function getClient(): RoutaraClient {
 }
 
 function textResult(data: unknown) {
-  return {
-    content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }],
-  };
+  return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
 }
 
 function errorResult(err: unknown) {
   if (err instanceof RoutaraApiError) {
     return {
       isError: true as const,
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify(
-            { error: err.message, status: err.status, code: err.code },
-            null,
-            2,
-          ),
-        },
-      ],
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          error: err.message,
+          status: err.status,
+          code: err.code,
+          request_id: err.requestId,
+          retry_after_seconds: err.retryAfterSeconds,
+        }, null, 2),
+      }],
     };
   }
   const message = err instanceof Error ? err.message : String(err);
@@ -51,145 +50,100 @@ function errorResult(err: unknown) {
   };
 }
 
-const TOOL_LIST_MODELS = `List Routara catalog models (OpenAI-compatible GET /v1/models).
+const TOOL_LIST_MODELS = `List models available through Routara.
 
-WHEN TO USE: Discover model slugs before calling routara_chat, routara_generate_image, or routara_generate_video. Call this first when the user did not specify a model.
+Use this before another tool when a model was not specified. Supports pagination and text filtering. The count field is always the total number of matches before pagination; returned is the number included in this response.`;
 
-WHEN NOT TO USE: Do not call for chat/image/video directly — use the specialized tools instead.
+const TOOL_CHAT = `Create an OpenAI-compatible chat completion through Routara.
 
-REQUIRES: ROUTARA_API_KEY environment variable (sk-or-v1-... from https://routara.ai/#auth).
+Use message for a simple single-turn request, or messages for system prompts, multi-turn chat, multimodal content, and tool-call continuations. The complete upstream response is returned, including usage, reasoning_content, and tool_calls when supplied by the model.`;
 
-RETURNS JSON: { count, models: string[], truncated: boolean } — up to 200 model slug IDs; truncated=true when the catalog has more.
+const TOOL_IMAGE = `Generate or edit an image through Routara.
 
-EXAMPLE: routara_list_models() → { "count": 787, "models": ["alibaba-qwen-turbo", "deepseek-r1", ...] }`;
+Model support varies. Besides prompt and size, the tool can pass quality, aspect ratio, reference image URL, negative prompt, seed, style, and response format to compatible models.`;
 
-const TOOL_CHAT = `Chat completion via Routara (OpenAI POST /v1/chat/completions).
+const TOOL_VIDEO = `Submit an asynchronous video-generation job through Routara.
 
-WHEN TO USE: Text generation, coding help, reasoning, translation, or any LLM chat task. Works with 787+ models (DeepSeek, Qwen, GLM, GPT, Claude, etc.).
+Supports text-to-video and image-to-video. Save the returned id or task_id and poll it with routara_get_video_status until completed or failed.`;
 
-WHEN NOT TO USE: Image generation (use routara_generate_image). Video (use routara_generate_video). Listing models (use routara_list_models).
+const TOOL_VIDEO_STATUS = `Poll a Routara video-generation job.
 
-REQUIRES: ROUTARA_API_KEY. Billing is per-token; promo credits apply only to domestic economy chat models.
+Pass the model when the upstream provider requires model-specific status routing.`;
 
-PARAMETERS:
-- model: slug from routara_list_models, e.g. "alibaba-qwen-turbo", "deepseek-deepseek-v3-2", "gpt-4o-mini"
-- message: single user turn (string)
-- max_tokens: 1–8192 output tokens (optional, default upstream)
-- temperature: 0–2 sampling (optional)
+const jsonObject = z.record(z.unknown());
+const chatMessage = z.object({
+  role: z.enum(['system', 'developer', 'user', 'assistant', 'tool']),
+  content: z.union([z.string(), z.array(jsonObject)]),
+  name: z.string().optional(),
+  tool_call_id: z.string().optional(),
+  tool_calls: z.array(jsonObject).optional(),
+});
 
-RETURNS JSON: { id, model, content: string, usage: { prompt_tokens, completion_tokens, total_tokens } }
+export async function main() {
+  const server = new McpServer({ name: 'routara-mcp', version: PKG_VERSION });
 
-EXAMPLE: routara_chat(model="alibaba-qwen-turbo", message="Summarize MCP in one sentence", max_tokens=64)`;
-
-const TOOL_IMAGE = `Generate an image via Routara (POST /v1/images/generations).
-
-WHEN TO USE: User asks for image, illustration, poster, or visual asset from a text prompt.
-
-WHEN NOT TO USE: Video (routara_generate_video). Text-only chat (routara_chat).
-
-REQUIRES: ROUTARA_API_KEY and cash wallet balance (promo credits cannot pay for media).
-
-PARAMETERS:
-- model: image slug, e.g. "bytedance-doubao-seedream-5-0"
-- prompt: detailed image description in English or Chinese
-- size: optional, e.g. "1024x1024", "2048x2048" (some models require ≥3686400 pixels total)
-- n: 1–4 images (optional, default 1)
-
-RETURNS JSON: OpenAI-style image response with url or b64_json fields per upstream model.
-
-EXAMPLE: routara_generate_image(model="bytedance-doubao-seedream-5-0", prompt="minimal flat app icon, emerald gradient", size="1024x1024")`;
-
-const TOOL_VIDEO = `Submit async video generation (POST /v1/videos/generations).
-
-WHEN TO USE: User wants a short video clip from a text prompt. Always follow up with routara_get_video_status to poll until completed.
-
-WHEN NOT TO USE: Still images (routara_generate_image). Chat (routara_chat).
-
-REQUIRES: ROUTARA_API_KEY and cash wallet balance.
-
-PARAMETERS:
-- model: video slug, e.g. "kling-kling-v3"
-- prompt: scene description
-- duration: 1–60 seconds (optional)
-
-RETURNS JSON: { id or task_id, status } — save the task id for routara_get_video_status.
-
-EXAMPLE: routara_generate_video(model="kling-kling-v3", prompt="drone shot over coastline at sunset", duration=5)`;
-
-const TOOL_VIDEO_STATUS = `Poll async video task status (GET /v1/videos/:id).
-
-WHEN TO USE: After routara_generate_video returns a task id. Poll every 10–30s until status is completed or failed.
-
-WHEN NOT TO USE: Before submitting a video job. For chat or images.
-
-REQUIRES: ROUTARA_API_KEY.
-
-PARAMETERS:
-- task_id: id string from routara_generate_video response
-
-RETURNS JSON: { status, progress?, output_url?, error? } — when status=completed, output_url contains the video link.
-
-EXAMPLE: routara_get_video_status(task_id="vid_abc123")`;
-
-async function main() {
-  const server = new McpServer({
-    name: 'routara-mcp',
-    version: PKG_VERSION,
-  });
-
-  server.tool('routara_list_models', TOOL_LIST_MODELS, {}, async () => {
-    try {
-      const data = await getClient().listModels();
-      const ids = (data.data ?? []).map((m) => m.id).slice(0, 200);
-      return textResult({
-        count: ids.length,
-        models: ids,
-        truncated: (data.data?.length ?? 0) > 200,
-      });
-    } catch (err) {
-      return errorResult(err);
-    }
-  });
+  server.tool(
+    'routara_list_models',
+    TOOL_LIST_MODELS,
+    {
+      query: z.string().optional().describe('Case-insensitive text filter applied to model IDs'),
+      offset: z.number().int().min(0).optional().describe('Pagination offset, default 0'),
+      limit: z.number().int().min(1).max(1000).optional().describe('Models returned, default 200, maximum 1000'),
+    },
+    async ({ query, offset = 0, limit = 200 }) => {
+      try {
+        const data = await getClient().listModels();
+        const all = (data.data ?? []).map((model) => model.id);
+        const normalizedQuery = query?.trim().toLowerCase();
+        const matches = normalizedQuery
+          ? all.filter((id) => id.toLowerCase().includes(normalizedQuery))
+          : all;
+        const models = matches.slice(offset, offset + limit);
+        return textResult({
+          count: matches.length,
+          returned: models.length,
+          offset,
+          limit,
+          models,
+          truncated: offset + models.length < matches.length,
+        });
+      } catch (err) {
+        return errorResult(err);
+      }
+    },
+  );
 
   server.tool(
     'routara_chat',
     TOOL_CHAT,
     {
-      model: z
-        .string()
-        .describe(
-          'Model slug from routara_list_models, e.g. alibaba-qwen-turbo, deepseek-deepseek-v3-2, gpt-4o-mini',
-        ),
-      message: z.string().describe('User message / instruction for the model (single turn)'),
-      max_tokens: z
-        .number()
-        .int()
-        .min(1)
-        .max(8192)
-        .optional()
-        .describe('Maximum output tokens to generate (1–8192)'),
-      temperature: z
-        .number()
-        .min(0)
-        .max(2)
-        .optional()
-        .describe('Sampling temperature: 0=deterministic, 1=balanced, 2=creative'),
+      model: z.string().min(1).describe('Model slug from routara_list_models'),
+      message: z.string().optional().describe('Convenience single user message; use messages for multi-turn input'),
+      messages: z.array(chatMessage).min(1).optional().describe('OpenAI-compatible conversation messages'),
+      max_tokens: z.number().int().min(1).max(131072).optional(),
+      temperature: z.number().min(0).max(2).optional(),
+      top_p: z.number().min(0).max(1).optional(),
+      stop: z.union([z.string(), z.array(z.string())]).optional(),
+      tools: z.array(jsonObject).optional().describe('OpenAI-compatible function tools'),
+      tool_choice: z.unknown().optional().describe('OpenAI-compatible tool choice'),
     },
-    async ({ model, message, max_tokens, temperature }) => {
+    async ({ model, message, messages, max_tokens, temperature, top_p, stop, tools, tool_choice }) => {
       try {
+        if (!message && !messages) {
+          throw new Error('Provide message or messages.');
+        }
+        const conversation = (messages ?? [{ role: 'user', content: message! }]) as ChatMessage[];
         const data = await getClient().chat({
           model,
-          messages: [{ role: 'user', content: message }],
+          messages: conversation,
           max_tokens,
           temperature,
+          top_p,
+          stop,
+          tools,
+          tool_choice,
         });
-        const choice = (data.choices as Array<{ message?: { content?: string } }> | undefined)?.[0];
-        return textResult({
-          id: data.id,
-          model: data.model,
-          content: choice?.message?.content ?? '',
-          usage: data.usage,
-        });
+        return textResult(data);
       } catch (err) {
         return errorResult(err);
       }
@@ -200,26 +154,21 @@ async function main() {
     'routara_generate_image',
     TOOL_IMAGE,
     {
-      model: z
-        .string()
-        .describe('Image model slug, e.g. bytedance-doubao-seedream-5-0'),
-      prompt: z.string().describe('Detailed text prompt describing the desired image'),
-      size: z
-        .string()
-        .optional()
-        .describe('Output dimensions, e.g. 1024x1024 or 2048x2048 (model-specific minimums apply)'),
-      n: z
-        .number()
-        .int()
-        .min(1)
-        .max(4)
-        .optional()
-        .describe('Number of images to generate (1–4, default 1)'),
+      model: z.string().min(1).describe('Image model slug from routara_list_models'),
+      prompt: z.string().min(1).describe('Detailed image prompt'),
+      size: z.string().optional().describe('Output dimensions such as 1024x1024'),
+      n: z.number().int().min(1).max(4).optional(),
+      quality: z.string().optional(),
+      response_format: z.enum(['url', 'b64_json']).optional(),
+      aspect_ratio: z.string().optional().describe('Aspect ratio such as 1:1, 16:9, or 9:16'),
+      image_url: z.string().url().optional().describe('Reference image URL for compatible image-edit models'),
+      negative_prompt: z.string().optional(),
+      seed: z.number().int().optional(),
+      style: z.string().optional(),
     },
-    async ({ model, prompt, size, n }) => {
+    async (params) => {
       try {
-        const data = await getClient().generateImage({ model, prompt, size, n });
-        return textResult(data);
+        return textResult(await getClient().generateImage(params));
       } catch (err) {
         return errorResult(err);
       }
@@ -230,20 +179,18 @@ async function main() {
     'routara_generate_video',
     TOOL_VIDEO,
     {
-      model: z.string().describe('Video model slug, e.g. kling-kling-v3'),
-      prompt: z.string().describe('Scene and motion description for the video clip'),
-      duration: z
-        .number()
-        .int()
-        .min(1)
-        .max(60)
-        .optional()
-        .describe('Clip length in seconds (1–60, model-dependent)'),
+      model: z.string().min(1).describe('Video model slug from routara_list_models'),
+      prompt: z.string().min(1).describe('Scene and motion description'),
+      duration: z.number().int().min(1).max(60).optional(),
+      aspect_ratio: z.string().optional().describe('Aspect ratio such as 16:9 or 9:16'),
+      image_url: z.string().url().optional().describe('Starting frame for image-to-video'),
+      negative_prompt: z.string().optional(),
+      resolution: z.string().optional().describe('Model-specific resolution such as 720p or 1080p'),
+      fps: z.number().int().min(1).max(120).optional(),
     },
-    async ({ model, prompt, duration }) => {
+    async (params) => {
       try {
-        const data = await getClient().generateVideo({ model, prompt, duration });
-        return textResult(data);
+        return textResult(await getClient().generateVideo(params));
       } catch (err) {
         return errorResult(err);
       }
@@ -254,22 +201,19 @@ async function main() {
     'routara_get_video_status',
     TOOL_VIDEO_STATUS,
     {
-      task_id: z
-        .string()
-        .describe('Task id returned by routara_generate_video (field id or task_id in JSON)'),
+      task_id: z.string().min(1).describe('Task id returned by routara_generate_video'),
+      model: z.string().optional().describe('Optional video model slug for provider-specific status routing'),
     },
-    async ({ task_id }) => {
+    async ({ task_id, model }) => {
       try {
-        const data = await getClient().getVideoTask(task_id);
-        return textResult(data);
+        return textResult(await getClient().getVideoTask(task_id, model));
       } catch (err) {
         return errorResult(err);
       }
     },
   );
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  await server.connect(new StdioServerTransport());
 }
 
 main().catch((err) => {

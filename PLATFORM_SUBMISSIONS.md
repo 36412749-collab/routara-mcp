@@ -1,4 +1,4 @@
-# Platform submission copy-paste (routara-mcp v1.0.0)
+# Platform submission copy-paste (routara-mcp v1.1.0)
 
 ## npm
 
@@ -27,8 +27,8 @@ URL: https://mcp.so/publish
 
 - Server name: **Routara LLM Gateway**
 - Package: **routara-mcp**
-- Repository: **https://github.com/routara-ai/routara-mcp**
-- Description: **OpenAI-compatible MCP tools for 48+ LLMs plus image and video generation at api.routara.ai**
+- Repository: **https://github.com/36412749-collab/routara-mcp**
+- Description: **OpenAI-compatible MCP tools for a live catalog of chat, image, and video models at api.routara.ai**
 
 ## Smithery
 
@@ -41,7 +41,7 @@ Submit npm package `routara-mcp` with env `ROUTARA_API_KEY`.
 Add under **Aggregators** or **AI Services**:
 
 ```markdown
-- [Routara](https://github.com/routara-ai/routara-mcp) - OpenAI-compatible LLM, image and video gateway ([api.routara.ai](https://api.routara.ai)).
+- [Routara](https://github.com/36412749-collab/routara-mcp) - OpenAI-compatible LLM, image and video gateway ([api.routara.ai](https://api.routara.ai)).
 ```
 
 ## Glama / PulseMCP
