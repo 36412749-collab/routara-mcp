@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "routara": {
+      "command": "npx",
+      "args": ["-y", "routara-mcp"],
+      "env": {
+        "ROUTARA_API_KEY": "sk-or-v1-REPLACE_WITH_YOUR_KEY"
+      }
+    }
+  }
+}
