@@ -1,0 +1,7 @@
+.git
+.github
+.mcpb-build
+node_modules
+coverage
+*.log
+routara-mcp.mcpb
