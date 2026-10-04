@@ -1,0 +1,135 @@
+{
+  "info": {
+    "name": "Routara API — first request and model switch",
+    "_postman_id": "95c9b4b0-0eef-4a37-a470-46d4af79af99",
+    "description": "Three real OpenAI-compatible requests. Set your own Routara API key in the collection variables before running them. Chat requests consume eligible trial credit or wallet balance.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{ROUTARA_API_KEY}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "ROUTARA_API_BASE",
+      "value": "https://api.routara.ai/v1",
+      "type": "string"
+    },
+    {
+      "key": "ROUTARA_API_KEY",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ROUTARA_MODEL",
+      "value": "alibaba-qwen-turbo",
+      "type": "string"
+    },
+    {
+      "key": "ROUTARA_ALTERNATE_MODEL",
+      "value": "deepseek-deepseek-v3-2",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. List available models",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{ROUTARA_API_BASE}}/models",
+        "description": "Read the live model IDs before selecting one. Catalog availability and prices may change."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.test('Model list exists', () => Array.isArray(pm.response.json().data));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. First chat response — Qwen",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"{{ROUTARA_MODEL}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Reply with one short migration tip.\"}],\n  \"max_tokens\": 64\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{ROUTARA_API_BASE}}/chat/completions",
+        "description": "One small, billable chat request. The response is returned by the live API, not a saved example."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.test('Assistant reply exists', () => Array.isArray(pm.response.json().choices) && pm.response.json().choices.length > 0);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Switch model — DeepSeek",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"{{ROUTARA_ALTERNATE_MODEL}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Reply with one short migration tip.\"}],\n  \"max_tokens\": 64\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{ROUTARA_API_BASE}}/chat/completions",
+        "description": "The same request shape with another live model ID. This is a manual switch, not automatic failover. It makes a second billable call."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.test('Assistant reply exists', () => Array.isArray(pm.response.json().choices) && pm.response.json().choices.length > 0);"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

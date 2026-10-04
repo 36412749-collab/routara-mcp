@@ -10,6 +10,7 @@ Official [Model Context Protocol](https://modelcontextprotocol.io) server for [R
 - OpenAI-compatible API: https://api.routara.ai/v1
 - Create an API key: https://routara.ai/auth?mode=register&returnTo=%2Fapp&utm_source=github&utm_medium=repository&utm_campaign=mcp_quickstart
 - Run a first OpenAI SDK request: [Python and Node.js quickstart](examples/openai-sdk-migration/README.md)
+- Try the API in Postman: [importable first-request collection](examples/postman/README.md)
 
 ## Install
 

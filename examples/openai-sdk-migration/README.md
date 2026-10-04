@@ -42,4 +42,4 @@ Set `ROUTARA_MODEL` to an ID from the live catalog, then rerun the example. Chec
 | 429 | Wait for the retry window before sending another request. |
 | 5xx | Record the request ID and retry later; avoid an unbounded retry loop. |
 
-See the [API documentation](https://routara.ai/docs?utm_source=github&utm_medium=repository&utm_campaign=openai_sdk_quickstart) and [MCP setup guide](https://routara.ai/mcp?utm_source=github&utm_medium=repository&utm_campaign=openai_sdk_quickstart) for the other integration paths. MCP tools do not change the model provider or billing of the host AI application.
+Prefer a request editor? [Import the Postman collection](../postman/README.md) to list live models and run the same chat shape with Qwen or DeepSeek. See the [API documentation](https://routara.ai/docs?utm_source=github&utm_medium=repository&utm_campaign=openai_sdk_quickstart) and [MCP setup guide](https://routara.ai/mcp?utm_source=github&utm_medium=repository&utm_campaign=openai_sdk_quickstart) for the other integration paths. MCP tools do not change the model provider or billing of the host AI application.
