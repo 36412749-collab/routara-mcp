@@ -6,9 +6,10 @@
 
 Official [Model Context Protocol](https://modelcontextprotocol.io) server for [Routara](https://routara.ai). Use Routara chat, image, and video models from Cursor, Claude Desktop, Codex, Windsurf, VS Code, and other MCP clients.
 
-- Website and setup guide: https://routara.ai/mcp
+- Website and setup guide: https://routara.ai/mcp?utm_source=github&utm_medium=repository&utm_campaign=mcp_quickstart
 - OpenAI-compatible API: https://api.routara.ai/v1
-- Create an API key: https://routara.ai/#auth
+- Create an API key: https://routara.ai/auth?mode=register&returnTo=%2Fapp&utm_source=github&utm_medium=repository&utm_campaign=mcp_quickstart
+- Run a first OpenAI SDK request: [Python and Node.js quickstart](examples/openai-sdk-migration/README.md)
 
 ## Install
 
@@ -55,6 +56,8 @@ enabled = true
 [mcp_servers.routara.env]
 ROUTARA_API_KEY = "sk-or-v1-YOUR_KEY_HERE"
 ```
+
+After adding the config, restart your MCP client and ask it to list Routara models. Then ask it to use `routara_chat` with a model available to your account. The MCP connection exposes tools; it does not replace the host application's own model subscription or billing.
 
 ## Environment
 
