@@ -48,12 +48,37 @@ test('RoutaraClient chat against live API when ROUTARA_API_KEY set', async (t) =
   assert.ok(String(content).length > 0);
 });
 
-test('invalid API key returns 401', async (t) => {
-  const client = new RoutaraClient({ apiKey: 'sk-or-v1-invalid-probe-key' });
-  await assert.rejects(
-    () => client.listModels(),
-    (err: unknown) => err instanceof RoutaraApiError && err.status === 401,
-  );
+test('invalid API key returns 401', async () => {
+  const server = createServer((_req, res) => {
+    res.writeHead(401, {
+      'content-type': 'application/json',
+      'x-request-id': 'req_invalid_key_probe',
+    });
+    res.end(JSON.stringify({ error: { message: 'Invalid API key', code: 'invalid_api_key' } }));
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address === 'object');
+    const client = new RoutaraClient({
+      apiKey: 'invalid-probe-key',
+      baseUrl: `http://127.0.0.1:${address.port}`,
+      timeoutMs: 1_000,
+      maxRetries: 0,
+    });
+    await assert.rejects(
+      () => client.listModels(),
+      (err: unknown) =>
+        err instanceof RoutaraApiError
+        && err.status === 401
+        && err.code === 'invalid_api_key'
+        && err.requestId === 'req_invalid_key_probe',
+    );
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
 });
 
 test('RoutaraClient retries 429 and preserves response metadata', async () => {

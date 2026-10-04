@@ -1,21 +1,9 @@
-#!/usr/bin/env node
-import { readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { RoutaraApiError, RoutaraClient, resolveApiKey } from './api.js';
-const FALLBACK_VERSION = '1.1.1';
-const PKG_VERSION = (() => {
-    try {
-        const pkg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'));
-        return pkg.version ?? FALLBACK_VERSION;
-    }
-    catch {
-        return FALLBACK_VERSION;
-    }
-})();
+const FALLBACK_VERSION = '1.1.2';
+const PKG_VERSION = FALLBACK_VERSION;
 // Smithery's hosted-module scanner looks for these two exports.  Keeping the
 // key optional is intentional: tool discovery and the MCP handshake must work
 // without credentials; the key is required only when a tool calls Routara.
@@ -194,15 +182,4 @@ export function createServer({ config, } = {}) {
 export async function main() {
     const server = createRoutaraMcpServer();
     await server.connect(new StdioServerTransport());
-}
-// `index.ts` is also bundled into the Routara HTTP gateway. In a CommonJS
-// bundle `import.meta.url` is unavailable, so guard it before resolving the
-// entrypoint instead of evaluating fileURLToPath eagerly.
-const currentModulePath = typeof import.meta.url === 'string' ? fileURLToPath(import.meta.url) : '';
-const isDirectExecution = Boolean(currentModulePath && process.argv[1] && currentModulePath === resolve(process.argv[1]));
-if (isDirectExecution) {
-    main().catch((err) => {
-        console.error('[routara-mcp] fatal:', err);
-        process.exit(1);
-    });
 }

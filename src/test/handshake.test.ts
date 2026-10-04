@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const ENTRY = join(ROOT, 'dist', 'index.js');
+const ENTRY = join(ROOT, 'dist', 'cli.js');
 
 type JsonRpc = {
   jsonrpc: '2.0';

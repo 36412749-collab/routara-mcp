@@ -21,4 +21,4 @@ COPY --from=build /app/dist ./dist
 
 USER node
 
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT ["node", "dist/cli.js"]

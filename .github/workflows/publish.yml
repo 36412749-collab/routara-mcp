@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - run: npm ci
@@ -25,11 +25,10 @@ jobs:
       - run: npm test
       - run: npx -y @anthropic-ai/mcpb validate manifest.json
       - run: npm run build:mcpb
+      - run: npm run verify:release
 
-      - name: Publish to npm
+      - name: Publish to npm with trusted publishing
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Download MCP Publisher
         run: |

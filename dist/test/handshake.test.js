@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const ENTRY = join(ROOT, 'dist', 'index.js');
+const ENTRY = join(ROOT, 'dist', 'cli.js');
 function send(proc, msg) {
     proc.stdin?.write(`${JSON.stringify(msg)}\n`);
 }

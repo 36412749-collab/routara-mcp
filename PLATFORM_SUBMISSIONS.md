@@ -1,4 +1,4 @@
-# Platform submission copy-paste (routara-mcp v1.1.1)
+# Platform submission copy-paste (routara-mcp v1.1.2)
 
 ## npm
 

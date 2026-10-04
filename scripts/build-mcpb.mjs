@@ -17,13 +17,12 @@ await rm(stage, { recursive: true, force: true });
 await mkdir(join(stage, 'dist'), { recursive: true });
 
 await build({
-  entryPoints: [join(root, 'src', 'index.ts')],
-  outfile: join(stage, 'dist', 'index.js'),
+  entryPoints: [join(root, 'src', 'cli.ts')],
+  outfile: join(stage, 'dist', 'cli.js'),
   bundle: true,
   platform: 'node',
   format: 'esm',
   target: 'node18',
-  banner: { js: '#!/usr/bin/env node' },
 });
 
 const manifest = await readJson(join(root, 'manifest.json'));
