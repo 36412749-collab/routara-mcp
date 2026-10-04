@@ -2,7 +2,7 @@
 
 ## 1.1.2 - 2026-10-04
 
-- Restored npm and MCP Registry publishing with a tested standalone CLI entry point.
+- Prepared npm and MCP Registry publishing with a tested standalone CLI entry point.
 - Made the MCPB and Docker entry points match the npm executable.
 - Included the current package version in the MCP handshake and API user agent.
 

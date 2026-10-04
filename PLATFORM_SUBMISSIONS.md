@@ -2,11 +2,22 @@
 
 ## npm
 
-```bash
-npm login --registry=https://registry.npmjs.org
-cd packages/routara-mcp
-npm publish --access public --registry=https://registry.npmjs.org
-```
+For automated releases, configure the existing `routara-mcp` package's npm
+Trusted Publisher to allow direct `npm publish` from GitHub Actions:
+
+- GitHub owner: `36412749-collab`
+- Repository: `routara-mcp`
+- Workflow filename: `publish.yml`
+- Allowed action: `npm publish`
+
+After CI passes, push a new tag matching `package.json` (for example,
+`v1.1.2`). The publish workflow builds and verifies the npm package and MCPB,
+publishes npm, registers the same version in the official MCP Registry, then
+creates the GitHub Release. Do not push the tag until Trusted Publisher is
+configured: the existing npm token path failed for v1.1.1.
+
+Verify the published npm version, official Registry version, GitHub Release,
+and a clean `npx routara-mcp@<version>` handshake before updating directories.
 
 ## Official MCP Registry
 
