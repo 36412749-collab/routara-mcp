@@ -19,7 +19,7 @@ python python/first_request.py
 
 ## Node.js
 
-Requires Node.js 18 or newer.
+Requires Node.js 22 or newer for the current OpenAI SDK release.
 
 ```bash
 npm init -y
