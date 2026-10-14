@@ -2,6 +2,8 @@
 
 This example keeps the OpenAI SDK request shape. The changes are the API key, base URL, and model ID. It makes one small, real chat request; it does not simulate a response or claim a fixed price or latency.
 
+For a step-by-step walkthrough, use the [Python guide](https://routara.ai/guides/openai-python?utm_source=github&utm_medium=example&utm_campaign=developer_guides) or [Node.js guide](https://routara.ai/guides/openai-node?utm_source=github&utm_medium=example&utm_campaign=developer_guides). The scripts below are the runnable source files.
+
 ## Before you run it
 
 1. [Create a Routara account and API key](https://routara.ai/developers/openai-migration?utm_source=github&utm_medium=repository&utm_campaign=openai_sdk_quickstart). Google and GitHub sign-in are available. Save the full key when it is shown.

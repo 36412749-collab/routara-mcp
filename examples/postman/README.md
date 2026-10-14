@@ -2,6 +2,8 @@
 
 Import [the collection file](routara-first-request.postman_collection.json) into Postman. It provides three requests: list live models, make a small Qwen chat request, and run the same prompt with DeepSeek. The second chat request demonstrates a manual model switch; it does not implement automatic failover.
 
+If you prefer code, follow the [Python](https://routara.ai/guides/openai-python?utm_source=github&utm_medium=postman_example&utm_campaign=developer_guides) or [Node.js](https://routara.ai/guides/openai-node?utm_source=github&utm_medium=postman_example&utm_campaign=developer_guides) first-request guide. To compare cost before testing, use the [model cost checklist](https://routara.ai/guides/model-cost-check?utm_source=github&utm_medium=postman_example&utm_campaign=developer_guides).
+
 1. [Create an account and API key](https://routara.ai/developers/openai-migration?utm_source=github&utm_medium=repository&utm_campaign=postman_quickstart). Save the complete key when it is shown.
 2. In the imported collection's **Variables**, set `ROUTARA_API_KEY` to your key as a local secret/current value. The published JSON has an empty key and no credentials. Do not export or share a collection after filling in a secret.
 3. Send **List available models** first. Then send **First chat response — Qwen**. Inspect the actual `id`, `model`, `choices`, and `usage` fields.
