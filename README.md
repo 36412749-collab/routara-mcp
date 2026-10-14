@@ -12,6 +12,8 @@ Official [Model Context Protocol](https://modelcontextprotocol.io) server for [R
 - Run a first OpenAI SDK request: [Python and Node.js quickstart](examples/openai-sdk-migration/README.md)
 - Try the API in Postman: [importable first-request collection](examples/postman/README.md)
 
+Practical walkthroughs: [Python SDK](https://routara.ai/guides/openai-python?utm_source=github&utm_medium=repository&utm_campaign=developer_guides) · [Node.js SDK](https://routara.ai/guides/openai-node?utm_source=github&utm_medium=repository&utm_campaign=developer_guides) · [Cursor MCP](https://routara.ai/guides/mcp-cursor?utm_source=github&utm_medium=repository&utm_campaign=developer_guides) · [Claude Desktop MCP](https://routara.ai/guides/mcp-claude-desktop?utm_source=github&utm_medium=repository&utm_campaign=developer_guides)
+
 ## Install
 
 ```bash

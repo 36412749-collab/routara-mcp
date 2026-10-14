@@ -7,3 +7,5 @@ mcp-publisher
 *.mcpb
 mcp-publisher*.tar.gz
 .npmrc
+__pycache__/
+*.pyc
